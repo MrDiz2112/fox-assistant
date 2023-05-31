@@ -1,14 +1,15 @@
 import { Telegraf } from "telegraf";
 import i18next from "i18next";
-import OpenAiClient from "./openAiClient";
+import OpenAiClient from "./OpenAiClient";
 import { message } from "telegraf/filters";
 import logger from "../core/logger";
 import {
     TSUNDERE_ROLE_GROUP,
     TSUNDERE_ROLE_PRIVATE,
 } from "../const/roleMessages";
+import {IBot} from "../interfaces/IBot";
 
-export default class TelegramBot {
+export default class TelegramBot implements IBot {
     static TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN!;
 
     bot: Telegraf = new Telegraf(TelegramBot.TELEGRAM_TOKEN);
@@ -19,69 +20,20 @@ export default class TelegramBot {
         process.once("SIGINT", () => this.bot.stop("SIGINT"));
         process.once("SIGTERM", () => this.bot.stop("SIGTERM"));
 
-        this.bot.start((ctx) => {
-            let greeting;
-            const chatType = ctx.chat.type;
+        this.init();
+    }
 
-            switch (chatType) {
-                case "private":
-                    greeting = i18next.t("greeting.private");
-                    break;
-                case "supergroup":
-                case "group":
-                    greeting = i18next.t("greeting.group");
-                    break;
-            }
+    private init() {
+        this.handleStart();
 
-            ctx.reply(greeting);
-        });
+        this.handleCommandClear();
+        this.handleCommandHistory();
+        this.handleCommandGpt();
 
-        this.bot.command("clear", (ctx) => {
-            const chatId = ctx.chat.id;
+        this.handleMessageText();
+    }
 
-            const client = this.getUserClient(chatId, ctx.chat.type);
-            client.clearMessages();
-
-            logger.info(`Chat ${chatId} history cleared`);
-
-            const message = i18next.t("clearHistory");
-
-            ctx.reply(message);
-        });
-
-        this.bot.command("history", (ctx) => {
-            const chatId = ctx.chat.id;
-
-            const client = this.getUserClient(chatId, ctx.chat.type);
-            const messagesHistory = client.getMessages();
-
-            logger.info(`Chat ${chatId} history requested`);
-
-            const historyFormatted = messagesHistory.map((message) => {
-                let name;
-
-                switch (message.role) {
-                    case "user":
-                        name = ctx.message.from.username;
-                        break;
-                    case "assistant":
-                        name = i18next.t("names.name1");
-                        break;
-                    case "system":
-                        name = i18next.t("names.system");
-                        break;
-                }
-
-                return `[${name}]: ${message.content}`;
-            });
-
-            ctx.reply(historyFormatted.join("\n"));
-        });
-
-        this.bot.command("gtp", (ctx) => {
-            ctx.reply("Пока я не умею это делать");
-        });
-
+    private handleMessageText() {
         this.bot.on(message("text"), async (ctx) => {
             const chatType = ctx.chat.type;
             const messageText = ctx.message.text;
@@ -127,6 +79,77 @@ export default class TelegramBot {
                     logger.error(`Chat ${chatId} user ${user} reply error`);
                     logger.error(err);
                 });
+        });
+    }
+
+    private handleCommandGpt() {
+        this.bot.command("gtp", (ctx) => {
+            ctx.reply("Пока я не умею это делать");
+        });
+    }
+
+    private handleCommandHistory() {
+        this.bot.command("history", (ctx) => {
+            const chatId = ctx.chat.id;
+
+            const client = this.getUserClient(chatId, ctx.chat.type);
+            const messagesHistory = client.getMessages();
+
+            logger.info(`Chat ${chatId} history requested`);
+
+            const historyFormatted = messagesHistory.map((message) => {
+                let name;
+
+                switch (message.role) {
+                    case "user":
+                        name = ctx.message.from.username;
+                        break;
+                    case "assistant":
+                        name = i18next.t("names.name1");
+                        break;
+                    case "system":
+                        name = i18next.t("names.system");
+                        break;
+                }
+
+                return `[${name}]: ${message.content}`;
+            });
+
+            ctx.reply(historyFormatted.join("\n"));
+        });
+    }
+
+    private handleCommandClear() {
+        this.bot.command("clear", (ctx) => {
+            const chatId = ctx.chat.id;
+
+            const client = this.getUserClient(chatId, ctx.chat.type);
+            client.clearMessages();
+
+            logger.info(`Chat ${chatId} history cleared`);
+
+            const message = i18next.t("clearHistory");
+
+            ctx.reply(message);
+        });
+    }
+
+    private handleStart() {
+        this.bot.start((ctx) => {
+            let greeting;
+            const chatType = ctx.chat.type;
+
+            switch (chatType) {
+                case "private":
+                    greeting = i18next.t("greeting.private");
+                    break;
+                case "supergroup":
+                case "group":
+                    greeting = i18next.t("greeting.group");
+                    break;
+            }
+
+            ctx.reply(greeting);
         });
     }
 

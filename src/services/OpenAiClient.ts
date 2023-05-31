@@ -5,8 +5,9 @@ import {
     OpenAIApi,
 } from "openai";
 import logger from "../core/logger";
+import {IOpenAiClient} from "../interfaces/IOpenAiClient";
 
-export default class OpenAiClient {
+export default class OpenAiClient implements IOpenAiClient {
     static OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
 
     private openai: OpenAIApi;
@@ -22,14 +23,6 @@ export default class OpenAiClient {
     }
 
     private updateMessages(message: ChatCompletionRequestMessage): void {
-        // const systemMessage = this.messages.pop();
-        //
-        // this.messages.push(message);
-        //
-        // if (systemMessage) {
-        //     this.messages.push(systemMessage);
-        // }
-
         this.messages.push(message);
     }
 

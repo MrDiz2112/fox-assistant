@@ -1,7 +1,7 @@
 import "dotenv/config";
 import logger from "./core/logger";
 import { initI18n } from "./core/i18nInit";
-import TelegramBot from "./services/telegramBot";
+import TelegramBot from "./services/TelegramBot";
 
 initI18n();
 
