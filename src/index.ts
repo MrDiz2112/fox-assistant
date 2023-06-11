@@ -1,12 +1,10 @@
 import "dotenv/config";
-import logger from "./core/logger";
 import { initI18n } from "./core/i18nInit";
-import TelegramBot from "./services/TelegramBot";
+import BotManager from "./services/BotManager";
 
 initI18n();
 
-logger.info("Bot launched");
+const botsManager = new BotManager();
 
-const bot = new TelegramBot();
-
-bot.launch();
+botsManager.handleBotsEvents();
+botsManager.launchBots();

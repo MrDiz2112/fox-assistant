@@ -1,39 +1,24 @@
 import { Telegraf } from "telegraf";
 import i18next from "i18next";
-import OpenAiClient from "./OpenAiClient";
 import { message } from "telegraf/filters";
 import logger from "../core/logger";
-import {
-    TSUNDERE_ROLE_GROUP,
-    TSUNDERE_ROLE_PRIVATE,
-} from "../const/roleMessages";
-import {IBot} from "../interfaces/IBot";
+import { ICompletionClientFactory } from "../interfaces/ICompletionClientFactory";
+import BaseBot from "./BaseBot";
+import { IBot } from "../interfaces/IBot";
 
-export default class TelegramBot implements IBot {
+export default class TelegramBot extends BaseBot implements IBot {
     static TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN!;
 
     bot: Telegraf = new Telegraf(TelegramBot.TELEGRAM_TOKEN);
 
-    clients: Map<number, OpenAiClient> = new Map();
+    constructor(completionClientFactory: ICompletionClientFactory) {
+        super(completionClientFactory);
 
-    constructor() {
         process.once("SIGINT", () => this.bot.stop("SIGINT"));
         process.once("SIGTERM", () => this.bot.stop("SIGTERM"));
-
-        this.init();
     }
 
-    private init() {
-        this.handleStart();
-
-        this.handleCommandClear();
-        this.handleCommandHistory();
-        this.handleCommandGpt();
-
-        this.handleMessageText();
-    }
-
-    private handleMessageText() {
+    public handleMessageText() {
         this.bot.on(message("text"), async (ctx) => {
             const chatType = ctx.chat.type;
             const messageText = ctx.message.text;
@@ -82,13 +67,13 @@ export default class TelegramBot implements IBot {
         });
     }
 
-    private handleCommandGpt() {
+    public handleCommandGpt() {
         this.bot.command("gtp", (ctx) => {
             ctx.reply("Пока я не умею это делать");
         });
     }
 
-    private handleCommandHistory() {
+    public handleCommandHistory() {
         this.bot.command("history", (ctx) => {
             const chatId = ctx.chat.id;
 
@@ -119,7 +104,7 @@ export default class TelegramBot implements IBot {
         });
     }
 
-    private handleCommandClear() {
+    public handleCommandClear() {
         this.bot.command("clear", (ctx) => {
             const chatId = ctx.chat.id;
 
@@ -134,7 +119,7 @@ export default class TelegramBot implements IBot {
         });
     }
 
-    private handleStart() {
+    public handleStart() {
         this.bot.start((ctx) => {
             let greeting;
             const chatType = ctx.chat.type;
@@ -153,31 +138,8 @@ export default class TelegramBot implements IBot {
         });
     }
 
-    private getUserClient(chatId: number, chatType: string): OpenAiClient {
-        if (!this.clients.has(chatId)) {
-            let role;
-
-            switch (chatType) {
-                case "private":
-                    role = TSUNDERE_ROLE_PRIVATE;
-                    break;
-                case "supergroup":
-                case "group":
-                    role = TSUNDERE_ROLE_GROUP;
-                    break;
-                default:
-                    role = TSUNDERE_ROLE_PRIVATE;
-                    break;
-            }
-
-            this.clients.set(chatId, new OpenAiClient(role));
-            logger.info(`New client created for chat ${chatId}`);
-        }
-
-        return this.clients.get(chatId)!;
-    }
-
     public launch(): Promise<void> {
+        logger.info("Telegram bot launched");
         return this.bot.launch();
     }
 }

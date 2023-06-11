@@ -1,6 +1,6 @@
-import {ChatCompletionRequestMessage} from "openai";
+import { ChatCompletionRequestMessage } from "openai";
 
-export interface IOpenAiClient {
+export interface ICompletionClient {
     getMessages(): ChatCompletionRequestMessage[];
     clearMessages(): void;
     completion(text: string, user?: string): Promise<string | undefined>;

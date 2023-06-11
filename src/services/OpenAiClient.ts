@@ -5,9 +5,9 @@ import {
     OpenAIApi,
 } from "openai";
 import logger from "../core/logger";
-import {IOpenAiClient} from "../interfaces/IOpenAiClient";
+import { ICompletionClient } from "../interfaces/ICompletionClient";
 
-export default class OpenAiClient implements IOpenAiClient {
+export default class OpenAiClient implements ICompletionClient {
     static OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
 
     private openai: OpenAIApi;
@@ -27,7 +27,7 @@ export default class OpenAiClient implements IOpenAiClient {
     }
 
     public getMessages(): ChatCompletionRequestMessage[] {
-        return this.messages;
+        return this.messages.splice(0, 2);
     }
 
     public clearMessages(): void {
