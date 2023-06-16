@@ -1,7 +1,8 @@
 import { IBotManager } from "../interfaces/IBotManager";
 import { IBot } from "../interfaces/IBot";
 import { CompletionClientFactory } from "./CompletionClientFactory";
-import TelegramBot from "./TelegramBot";
+import VkBot from "./bots/VkBot";
+import TelegramBot from "./bots/TelegramBot";
 
 export default class BotManager implements IBotManager {
     bots: IBot[] = [];
@@ -9,7 +10,7 @@ export default class BotManager implements IBotManager {
     constructor() {
         const factory = new CompletionClientFactory();
 
-        this.bots = [new TelegramBot(factory)];
+        this.bots = [new TelegramBot(factory), new VkBot(factory)];
     }
 
     handleBotsEvents(): void {

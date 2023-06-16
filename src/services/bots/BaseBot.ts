@@ -1,13 +1,13 @@
-import { ICompletionClient } from "../interfaces/ICompletionClient";
+import { ICompletionClient } from "../../interfaces/ICompletionClient";
 import {
     TSUNDERE_ROLE_GROUP,
     TSUNDERE_ROLE_PRIVATE,
-} from "../const/roleMessages";
-import logger from "../core/logger";
+} from "../../const/roleMessages";
+import logger from "../../core/logger";
 import {
     CompletionType,
     ICompletionClientFactory,
-} from "../interfaces/ICompletionClientFactory";
+} from "../../interfaces/ICompletionClientFactory";
 
 export default class BaseBot {
     clientCompletionType: CompletionType = "openai";

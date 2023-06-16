@@ -1,14 +1,15 @@
 import { Telegraf } from "telegraf";
 import i18next from "i18next";
 import { message } from "telegraf/filters";
-import logger from "../core/logger";
-import { ICompletionClientFactory } from "../interfaces/ICompletionClientFactory";
+import logger from "../../core/logger";
+import { ICompletionClientFactory } from "../../interfaces/ICompletionClientFactory";
 import BaseBot from "./BaseBot";
-import { IBot } from "../interfaces/IBot";
+import { IBot } from "../../interfaces/IBot";
 
 export default class TelegramBot extends BaseBot implements IBot {
     static TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN!;
 
+    // TODO context
     bot: Telegraf = new Telegraf(TelegramBot.TELEGRAM_TOKEN);
 
     constructor(completionClientFactory: ICompletionClientFactory) {

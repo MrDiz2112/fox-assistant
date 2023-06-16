@@ -1,7 +1,7 @@
 import { ICompletionClientFactory } from "../src/interfaces/ICompletionClientFactory";
 import { describe } from "node:test";
 import { ICompletionClient } from "../src/interfaces/ICompletionClient";
-import TelegramBot from "../src/services/TelegramBot";
+import TelegramBot from "../src/services/bots/TelegramBot";
 
 let factory: ICompletionClientFactory;
 
