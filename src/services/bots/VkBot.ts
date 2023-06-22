@@ -21,7 +21,15 @@ export default class VkBot extends BaseBot implements IBot {
         this.vk.updates.on("message_new", this.hearManager.middleware);
     }
     handleCommandClear(): void {
-        this.hearManager.hear(/^\/clear$/i, async (ctx) => {});
+        this.hearManager.hear(/^\/clear$/i, async (ctx) => {
+            const chatId = ctx.peerId!;
+            const client = this.getUserClient(chatId, "chat");
+            await client.clearMessages();
+
+            const message = i18next.t("clearHistory");
+
+            await ctx.send(message);
+        });
     }
 
     handleCommandGpt(): void {}
