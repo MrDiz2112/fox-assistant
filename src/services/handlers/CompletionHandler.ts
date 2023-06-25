@@ -1,6 +1,5 @@
 import { ICompletionHandler } from "../../interfaces/ICompletionHandler";
 import i18next from "i18next";
-import logger from "../../core/logger";
 import { CompletionHandlerContext } from "../../domain/CompletionHandlerContext";
 import {
     CompletionType,
@@ -11,6 +10,9 @@ import {
     TSUNDERE_ROLE_GROUP,
     TSUNDERE_ROLE_PRIVATE,
 } from "../../const/roleMessages";
+import Logger from "../../core/Logger";
+
+const logger = Logger.getLogger("CompletionHandler");
 
 export default class CompletionHandler implements ICompletionHandler {
     clientCompletionType: CompletionType = "openai";

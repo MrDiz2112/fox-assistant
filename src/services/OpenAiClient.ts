@@ -4,8 +4,10 @@ import {
     Configuration,
     OpenAIApi,
 } from "openai";
-import logger from "../core/logger";
 import { ICompletionClient } from "../interfaces/ICompletionClient";
+import Logger from "../core/Logger";
+
+const logger = Logger.getLogger("OpenAiClient");
 
 export default class OpenAiClient implements ICompletionClient {
     static OPENAI_API_KEY = process.env.OPENAI_API_KEY!;

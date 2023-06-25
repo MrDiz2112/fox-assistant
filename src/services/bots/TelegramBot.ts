@@ -1,10 +1,12 @@
 import { Telegraf } from "telegraf";
 import i18next from "i18next";
 import { message } from "telegraf/filters";
-import logger from "../../core/logger";
 import BaseBot from "./BaseBot";
 import { ICompletionHandler } from "../../interfaces/ICompletionHandler";
 import { CompletionHandlerContext } from "../../domain/CompletionHandlerContext";
+import Logger from "../../core/Logger";
+
+const logger = Logger.getLogger("TelegramBot");
 
 export default class TelegramBot extends BaseBot {
     private static TOKEN = process.env.TELEGRAM_TOKEN!;

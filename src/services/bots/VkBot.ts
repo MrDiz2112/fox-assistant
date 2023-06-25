@@ -1,12 +1,12 @@
 import BaseBot from "./BaseBot";
 import { VK } from "vk-io";
-import logger from "../../core/logger";
 import { HearManager } from "@vk-io/hear";
 import i18next from "i18next";
 import { ICompletionHandler } from "../../interfaces/ICompletionHandler";
 import { CompletionHandlerContext } from "../../domain/CompletionHandlerContext";
+import Logger from "../../core/Logger";
 
-logger.child({});
+const logger = Logger.getLogger("VKBot");
 
 export default class VkBot extends BaseBot {
     static TOKEN = process.env.VK_TOKEN!;
