@@ -42,7 +42,7 @@ export default class CompletionHandler implements ICompletionHandler {
         const user = ctx.username;
         const message = ctx.messageText!;
 
-        logger.info(`Chat ${chatId} user ${user} message: ${message}`);
+        logger.info(`Chat ${chatId} user ${user} completion requested`);
 
         const client = this.getUserClient(ctx);
 
