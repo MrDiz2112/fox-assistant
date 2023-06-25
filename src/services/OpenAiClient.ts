@@ -49,7 +49,7 @@ export default class OpenAiClient implements ICompletionClient {
 
         const completion = await this.openai
             .createChatCompletion({
-                model: "gpt-3.5-turbo",
+                model: "gpt-3.5-turbo-16k-0613",
                 temperature: 0.6,
                 messages: this.messages,
             })
