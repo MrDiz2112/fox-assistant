@@ -33,9 +33,11 @@ export default class TelegramBot extends BaseBot {
 
             if (completion == null) {
                 logger.error(
-                    `Telegram Chat ${context.chatId} user ${context.username} completion error`
+                    `Chat ${context.chatId} user ${context.username} completion error`
                 );
-                completion = i18next.t("completionError") as string;
+                // completion = i18next.t("completionError") as string;
+
+                return;
             }
 
             await ctx
@@ -43,7 +45,42 @@ export default class TelegramBot extends BaseBot {
                     completion.replace(/([|{\[\]*_~}+)(#>!=\-.])/gm, "\\$1")
                 )
                 .catch((err) => {
-                    // logger.error(`Chat ${chatId} user ${user} reply error`);
+                    logger.error(err);
+                });
+        });
+    }
+
+    public handleForward() {
+        this.bot.on(message("forward_from_chat"), async (ctx) => {
+            // @ts-ignore
+            const text = ctx?.message?.caption ?? "";
+
+            const context: CompletionHandlerContext = {
+                chatId: ctx?.chat?.id,
+                chatType: ctx?.chat?.type === "private" ? "user" : "group",
+                messageType: "forward",
+                messageText: i18next.t("forward_note").concat(text),
+                username: ctx?.from?.username!,
+            };
+
+            let completion = await this.completionHandler
+                .handleMessageText(context)
+                .catch((err) => {
+                    logger.error(err);
+                });
+
+            if (completion == null) {
+                logger.error(
+                    `Chat ${context.chatId} user ${context.username} completion error`
+                );
+                completion = i18next.t("forwardError") as string;
+            }
+
+            await ctx
+                .replyWithMarkdownV2(
+                    completion.replace(/([|{\[\]*_~}+)(#>!=\-.])/gm, "\\$1")
+                )
+                .catch((err) => {
                     logger.error(err);
                 });
         });
@@ -89,6 +126,7 @@ export default class TelegramBot extends BaseBot {
         return {
             chatId: ctx?.chat?.id,
             chatType: ctx?.chat?.type === "private" ? "user" : "group",
+            messageType: "text",
             messageText: ctx?.message?.text,
             username: ctx?.from?.username!,
         };

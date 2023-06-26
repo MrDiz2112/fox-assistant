@@ -18,6 +18,7 @@ export default class BotManager implements IBotManager {
     handleBotsEvents(): void {
         for (const bot of this.bots) {
             bot.handleMessageText();
+            bot.handleForward();
             bot.handleCommandStart();
             bot.handleCommandHistory();
             bot.handleCommandClear();

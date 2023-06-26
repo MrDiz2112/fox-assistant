@@ -5,6 +5,8 @@ export interface ICompletionHandler {
     handleMessageText(
         ctx: CompletionHandlerContext
     ): Promise<string | undefined>;
+
+    handleForward(ctx: CompletionHandlerContext): Promise<string | undefined>;
     handleCommandStart(ctx: CompletionHandlerContext): string;
     handleCommandHistory(ctx: CompletionHandlerContext): string;
     handleCommandClear(ctx: CompletionHandlerContext): string;

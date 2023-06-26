@@ -23,7 +23,7 @@ export default class CompletionHandler implements ICompletionHandler {
     async handleMessageText(
         ctx: CompletionHandlerContext
     ): Promise<string | undefined> {
-        if (ctx.chatType === "group") {
+        if (ctx.chatType === "group" && ctx.messageType === "text") {
             const prefixes = [
                 i18next.t("names.name1").toLowerCase(),
                 i18next.t("names.name2").toLowerCase(),
@@ -47,6 +47,12 @@ export default class CompletionHandler implements ICompletionHandler {
         const client = this.getUserClient(ctx);
 
         return client.completion(message, user);
+    }
+
+    async handleForward(
+        ctx: CompletionHandlerContext
+    ): Promise<string | undefined> {
+        return undefined;
     }
 
     handleCommandStart(ctx: CompletionHandlerContext): string {

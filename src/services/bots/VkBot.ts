@@ -1,10 +1,10 @@
 import BaseBot from "./BaseBot";
-import { VK } from "vk-io";
+import { VK, WallAttachment } from "vk-io";
 import { HearManager } from "@vk-io/hear";
-import i18next from "i18next";
 import { ICompletionHandler } from "../../interfaces/ICompletionHandler";
 import { CompletionHandlerContext } from "../../domain/CompletionHandlerContext";
 import Logger from "../../core/Logger";
+import i18next from "i18next";
 
 const logger = Logger.getLogger("VKBot");
 
@@ -24,7 +24,27 @@ export default class VkBot extends BaseBot {
     }
     handleMessageText(): void {
         this.vk.updates.on("message_new", async (ctx, next) => {
-            const context = this.getContext(ctx);
+            let context = this.getContext(ctx);
+
+            if (ctx.attachments != null) {
+                // @ts-ignore
+                const wallPost = ctx.attachments.find(
+                    (a) => a.type === "wall"
+                ) as WallAttachment;
+
+                // @ts-ignore
+                const text = wallPost?.payload?.text;
+
+                if (text == null) {
+                    return;
+                }
+
+                context = {
+                    ...context,
+                    messageType: "forward",
+                    messageText: i18next.t("forward_note").concat(text),
+                };
+            }
 
             let completion = await this.completionHandler
                 .handleMessageText(context)
@@ -34,15 +54,19 @@ export default class VkBot extends BaseBot {
 
             if (completion == null) {
                 logger.error(
-                    `VK Chat ${context.chatId} user ${context.username} completion error`
+                    `Chat ${context.chatId} user ${context.username} completion error`
                 );
-                completion = i18next.t("completionError") as string;
+                // completion = i18next.t("completionError") as string;
+
+                return;
             }
 
             await ctx.send(completion);
             await next();
         });
     }
+
+    handleForward(): void {}
 
     handleCommandStart(): void {
         this.hearManager.hear(/^\/start$/i, async (ctx) => {

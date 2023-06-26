@@ -11,6 +11,7 @@ const logger = Logger.getLogger("OpenAiClient");
 
 export default class OpenAiClient implements ICompletionClient {
     static OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
+    static OPENAI_MODEL = process.env.OPENAI_MODEL!;
 
     private openai: OpenAIApi;
     private messages: ChatCompletionRequestMessage[] = [];
@@ -49,8 +50,8 @@ export default class OpenAiClient implements ICompletionClient {
 
         const completion = await this.openai
             .createChatCompletion({
-                model: "gpt-3.5-turbo-0613",
-                temperature: 0.6,
+                model: OpenAiClient.OPENAI_MODEL,
+                temperature: 0.8,
                 messages: this.messages,
             })
             .then((res) => {

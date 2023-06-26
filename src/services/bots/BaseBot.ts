@@ -4,6 +4,7 @@ abstract class BaseBot {
     protected constructor(protected completionHandler: ICompletionHandler) {}
 
     abstract handleMessageText(): void;
+    abstract handleForward(): void;
 
     abstract handleCommandStart(): void;
 
