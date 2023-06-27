@@ -1,27 +1,27 @@
 import { IBotManager } from "../interfaces/IBotManager";
-import { IBot } from "../interfaces/IBot";
 import { CompletionClientFactory } from "./CompletionClientFactory";
 import VkBot from "./bots/VkBot";
 import TelegramBot from "./bots/TelegramBot";
+import BaseBot from "./bots/BaseBot";
+import CompletionHandler from "./handlers/CompletionHandler";
 
 export default class BotManager implements IBotManager {
-    bots: IBot[] = [];
+    bots: BaseBot[] = [];
 
     constructor() {
         const factory = new CompletionClientFactory();
+        const handler = new CompletionHandler(factory);
 
-        this.bots = [new TelegramBot(factory), new VkBot(factory)];
+        this.bots = [new TelegramBot(handler), new VkBot(handler)];
     }
 
     handleBotsEvents(): void {
         for (const bot of this.bots) {
-            bot.handleStart();
-
+            bot.handleMessageText();
+            bot.handleForward();
+            bot.handleCommandStart();
             bot.handleCommandHistory();
             bot.handleCommandClear();
-            bot.handleCommandGpt();
-
-            bot.handleMessageText();
         }
     }
 

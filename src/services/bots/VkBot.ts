@@ -1,96 +1,113 @@
 import BaseBot from "./BaseBot";
-import { IBot } from "../../interfaces/IBot";
-import { ICompletionClientFactory } from "../../interfaces/ICompletionClientFactory";
-import { VK } from "vk-io";
-import logger from "../../core/logger";
+import { VK, WallAttachment } from "vk-io";
 import { HearManager } from "@vk-io/hear";
+import { ICompletionHandler } from "../../interfaces/ICompletionHandler";
+import { CompletionHandlerContext } from "../../domain/CompletionHandlerContext";
+import Logger from "../../core/Logger";
 import i18next from "i18next";
+import * as util from "util";
 
-export default class VkBot extends BaseBot implements IBot {
-    static VK_TOKEN = process.env.VK_TOKEN!;
+const logger = Logger.getLogger("VKBot");
+
+export default class VkBot extends BaseBot {
+    static TOKEN = process.env.VK_TOKEN!;
     vk: VK = new VK({
-        token: VkBot.VK_TOKEN,
+        token: VkBot.TOKEN,
+        language: "en",
     });
 
     // TODO context
     hearManager = new HearManager();
 
-    constructor(completionClientFactory: ICompletionClientFactory) {
-        super(completionClientFactory);
+    constructor(commandHandler: ICompletionHandler) {
+        super(commandHandler);
 
         this.vk.updates.on("message_new", this.hearManager.middleware);
     }
-    handleCommandClear(): void {
-        this.hearManager.hear(/^\/clear$/i, async (ctx) => {
-            const chatId = ctx.peerId!;
-            const client = this.getUserClient(chatId, "chat");
-            await client.clearMessages();
-
-            const message = i18next.t("clearHistory");
-
-            await ctx.send(message);
-        });
-    }
-
-    handleCommandGpt(): void {}
-
-    handleCommandHistory(): void {}
-
     handleMessageText(): void {
         this.vk.updates.on("message_new", async (ctx, next) => {
-            if (ctx.peerType === "chat") {
-                const prefixes = [
-                    i18next.t("names.name1").toLowerCase(),
-                    i18next.t("names.name2").toLowerCase(),
-                ];
+            let context = await this.getContext(ctx);
 
-                if (
-                    !prefixes.some((prefix) =>
-                        ctx.text?.toLowerCase().startsWith(prefix)
-                    )
-                ) {
+            if (ctx.attachments != null) {
+                // @ts-ignore
+                const wallPost = ctx.attachments.find(
+                    (a) => a.type === "wall"
+                ) as WallAttachment;
+
+                // @ts-ignore
+                const text = wallPost?.text;
+                // @ts-ignore
+                const groupName = wallPost?.payload?.from?.name;
+
+                if (text == null) {
                     return;
                 }
+
+                const message = util
+                    .format(
+                        i18next.t("forward_note"),
+                        i18next.t("social.vk"),
+                        groupName ?? i18next.t("social.group.unknown")
+                    )
+                    .concat(text);
+
+                context = {
+                    ...context,
+                    messageType: "forward",
+                    messageText: message,
+                };
             }
 
-            const chatId = ctx.peerId!;
-            const client = this.getUserClient(chatId, "chat");
-
-            const user = ctx.senderId!;
-
-            logger.info(`VK Chat ${chatId} user ${user} message: ${ctx.text}`);
-
-            let completion = await client.completion(
-                ctx.text!,
-                user.toString()
-            );
-
-            logger.info(
-                `VK Chat ${chatId} user ${user} completion: ${completion}`
-            );
+            let completion = await this.completionHandler
+                .handleMessageText(context)
+                .catch((err) => {
+                    logger.error(err);
+                });
 
             if (completion == null) {
-                logger.error(`VK Chat ${chatId} user ${user} completion error`);
-                completion = i18next.t("completionError") as string;
+                logger.error(
+                    `Chat ${context.chatId} user ${context.username} completion error`
+                );
+                // completion = i18next.t("completionError") as string;
+
+                return;
             }
 
             await ctx.send(completion);
-
             await next();
         });
     }
 
-    handleStart(): void {
-        this.hearManager.hear(/^\/start$/i, async (ctx) => {
-            let greeting;
+    handleForward(): void {}
 
-            if (ctx.isChat) {
-                greeting = i18next.t("greeting.group");
-            } else {
-                greeting = i18next.t("greeting.private");
-            }
+    handleCommandStart(): void {
+        this.hearManager.hear(/^\/start$/i, async (ctx) => {
+            const context = await this.getContext(ctx);
+
+            let greeting = this.completionHandler.handleCommandStart(context);
 
             await ctx.send(greeting);
+        });
+    }
+
+    handleCommandHistory(): void {
+        this.hearManager.hear(/^\/history$/i, async (ctx) => {
+            const context = await this.getContext(ctx);
+
+            const history =
+                this.completionHandler.handleCommandHistory(context);
+
+            await ctx.send(history);
+        });
+    }
+
+    handleCommandClear(): void {
+        this.hearManager.hear(/^\/clear$/i, async (ctx) => {
+            const context = await this.getContext(ctx);
+
+            const message = this.completionHandler.handleCommandClear(context);
+
+            await ctx.send(message);
         });
     }
 
@@ -98,5 +115,26 @@ export default class VkBot extends BaseBot implements IBot {
         return this.vk.updates.start().then(() => {
             logger.info("VK bot started");
         });
+    }
+
+    private async getContext(ctx: any): Promise<CompletionHandlerContext> {
+        const users = await this.vk.api.users.get({
+            user_ids: ctx.senderId,
+        });
+
+        let username;
+
+        if (users[0] != null) {
+            username = `${users[0].first_name}${users[0].last_name}`;
+        } else {
+            username = ctx.senderId.toString();
+        }
+
+        return {
+            chatId: ctx.peerId!,
+            chatType: ctx.isChat ? "group" : "user",
+            messageText: ctx.text!,
+            username: username,
+        };
     }
 }
