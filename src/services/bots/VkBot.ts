@@ -5,6 +5,7 @@ import { ICompletionHandler } from "../../interfaces/ICompletionHandler";
 import { CompletionHandlerContext } from "../../domain/CompletionHandlerContext";
 import Logger from "../../core/Logger";
 import i18next from "i18next";
+import * as util from "util";
 
 const logger = Logger.getLogger("VKBot");
 
@@ -12,6 +13,7 @@ export default class VkBot extends BaseBot {
     static TOKEN = process.env.VK_TOKEN!;
     vk: VK = new VK({
         token: VkBot.TOKEN,
+        language: "en",
     });
 
     // TODO context
@@ -24,7 +26,7 @@ export default class VkBot extends BaseBot {
     }
     handleMessageText(): void {
         this.vk.updates.on("message_new", async (ctx, next) => {
-            let context = this.getContext(ctx);
+            let context = await this.getContext(ctx);
 
             if (ctx.attachments != null) {
                 // @ts-ignore
@@ -33,16 +35,26 @@ export default class VkBot extends BaseBot {
                 ) as WallAttachment;
 
                 // @ts-ignore
-                const text = wallPost?.payload?.text;
+                const text = wallPost?.text;
+                // @ts-ignore
+                const groupName = wallPost?.payload?.from?.name;
 
                 if (text == null) {
                     return;
                 }
 
+                const message = util
+                    .format(
+                        i18next.t("forward_note"),
+                        i18next.t("social.vk"),
+                        groupName ?? i18next.t("social.group.unknown")
+                    )
+                    .concat(text);
+
                 context = {
                     ...context,
                     messageType: "forward",
-                    messageText: i18next.t("forward_note").concat(text),
+                    messageText: message,
                 };
             }
 
@@ -70,7 +82,7 @@ export default class VkBot extends BaseBot {
 
     handleCommandStart(): void {
         this.hearManager.hear(/^\/start$/i, async (ctx) => {
-            const context = this.getContext(ctx);
+            const context = await this.getContext(ctx);
 
             let greeting = this.completionHandler.handleCommandStart(context);
 
@@ -80,7 +92,7 @@ export default class VkBot extends BaseBot {
 
     handleCommandHistory(): void {
         this.hearManager.hear(/^\/history$/i, async (ctx) => {
-            const context = this.getContext(ctx);
+            const context = await this.getContext(ctx);
 
             const history =
                 this.completionHandler.handleCommandHistory(context);
@@ -91,7 +103,7 @@ export default class VkBot extends BaseBot {
 
     handleCommandClear(): void {
         this.hearManager.hear(/^\/clear$/i, async (ctx) => {
-            const context = this.getContext(ctx);
+            const context = await this.getContext(ctx);
 
             const message = this.completionHandler.handleCommandClear(context);
 
@@ -105,12 +117,24 @@ export default class VkBot extends BaseBot {
         });
     }
 
-    private getContext(ctx: any): CompletionHandlerContext {
+    private async getContext(ctx: any): Promise<CompletionHandlerContext> {
+        const users = await this.vk.api.users.get({
+            user_ids: ctx.senderId,
+        });
+
+        let username;
+
+        if (users[0] != null) {
+            username = `${users[0].first_name}${users[0].last_name}`;
+        } else {
+            username = ctx.senderId.toString();
+        }
+
         return {
             chatId: ctx.peerId!,
             chatType: ctx.isChat ? "group" : "user",
             messageText: ctx.text!,
-            username: ctx.senderId.toString(),
+            username: username,
         };
     }
 }

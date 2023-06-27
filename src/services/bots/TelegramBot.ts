@@ -5,6 +5,7 @@ import BaseBot from "./BaseBot";
 import { ICompletionHandler } from "../../interfaces/ICompletionHandler";
 import { CompletionHandlerContext } from "../../domain/CompletionHandlerContext";
 import Logger from "../../core/Logger";
+import util from "util";
 
 const logger = Logger.getLogger("TelegramBot");
 
@@ -55,11 +56,26 @@ export default class TelegramBot extends BaseBot {
             // @ts-ignore
             const text = ctx?.message?.caption ?? "";
 
+            if (text == null) {
+                return;
+            }
+
+            // @ts-ignore
+            const groupName = ctx?.message?.forward_from_chat?.title;
+
+            const message = util
+                .format(
+                    i18next.t("forward_note"),
+                    i18next.t("social.telegram"),
+                    groupName ?? i18next.t("social.group.unknown")
+                )
+                .concat(text);
+
             const context: CompletionHandlerContext = {
                 chatId: ctx?.chat?.id,
                 chatType: ctx?.chat?.type === "private" ? "user" : "group",
                 messageType: "forward",
-                messageText: i18next.t("forward_note").concat(text),
+                messageText: message,
                 username: ctx?.from?.username!,
             };
 
