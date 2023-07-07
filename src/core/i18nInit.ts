@@ -13,7 +13,7 @@ function initI18n() {
             preload: ["ru"],
             defaultNS: "translation",
             backend: {
-                loadPath: "locales/{{lng}}/{{ns}}.json",
+                loadPath: "locales/{{lng}}.json",
             },
         },
         (error) => {

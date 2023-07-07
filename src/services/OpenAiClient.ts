@@ -48,10 +48,10 @@ export default class OpenAiClient implements ICompletionClient {
             name: user,
         });
 
-        const completion = await this.openai
+        const completionResponse = await this.openai
             .createChatCompletion({
                 model: OpenAiClient.OPENAI_MODEL,
-                temperature: 0.8,
+                temperature: 1,
                 messages: this.messages,
             })
             .then((res) => {
@@ -60,16 +60,18 @@ export default class OpenAiClient implements ICompletionClient {
                 return res;
             })
             .catch((res) => {
-                logger.error(`${res.status} - ${res.statusText}`);
+                logger.error(
+                    `[${res.response.status}](${res.response.data.error.code}) - ${res.response.data.error.type} ${res.response.data.error.message}`
+                );
 
                 return undefined;
             });
 
-        if (completion == undefined) {
+        if (completionResponse == undefined) {
             return undefined;
         }
 
-        const completionMessage = completion.data.choices[0]?.message;
+        const completionMessage = completionResponse.data.choices[0]?.message;
 
         if (completionMessage) {
             this.updateMessages(completionMessage);

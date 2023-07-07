@@ -3,7 +3,7 @@
   "scripts": {
     "start": "node build/index.js",
     "start:dev": "npx nodemon",
-    "build": "rimraf ./build && tsc && npm run copy-files",
+    "build": "rimraf ./build && tsc",
     "copy-files": "copyfiles locales/**/* build",
     "test": "jest"
   },
