@@ -21,7 +21,7 @@ export default class BotManager implements IBotManager {
             bot.handleCommandHistory();
             bot.handleCommandClear();
             bot.handleMessageText();
-            bot.handleForward();
+            // bot.handleForward();
         }
     }
 

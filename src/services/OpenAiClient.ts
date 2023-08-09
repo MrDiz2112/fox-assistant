@@ -52,6 +52,8 @@ export default class OpenAiClient implements ICompletionClient {
             .createChatCompletion({
                 model: OpenAiClient.OPENAI_MODEL,
                 temperature: 1,
+                frequency_penalty: 0.3,
+                presence_penalty: 0.7,
                 messages: this.messages,
             })
             .then((res) => {

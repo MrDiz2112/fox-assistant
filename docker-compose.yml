@@ -11,8 +11,6 @@ services:
       - VK_TOKEN=${VK_TOKEN}
       - OPENAI_MODEL=${OPENAI_MODEL}
     working_dir: /app
-    volumes:
-      - E:/projects/fox-assistant/locales:/app/locales
     restart: always
     build:
       context: .

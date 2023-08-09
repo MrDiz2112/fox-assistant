@@ -11,6 +11,7 @@ FROM node:lts as production
 
 WORKDIR /app
 
+COPY --from=builder ./app/locales ./locales
 COPY --from=builder ./app/build ./build
 COPY package.json .
 
