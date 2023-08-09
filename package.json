@@ -1,12 +1,11 @@
 {
   "name": "fox-assistant",
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "node build/index.js",
     "start:dev": "npx nodemon",
-    "build": "rimraf ./dist && tsc",
+    "build": "rimraf ./build && tsc",
     "test": "jest"
   },
-  "packageManager": "yarn@3.5.1",
   "dependencies": {
     "@vk-io/hear": "^1.1.1",
     "@vk-io/scenes": "^1.2.1",

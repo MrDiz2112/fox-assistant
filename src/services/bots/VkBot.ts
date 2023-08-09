@@ -26,37 +26,11 @@ export default class VkBot extends BaseBot {
     }
     handleMessageText(): void {
         this.vk.updates.on("message_new", async (ctx, next) => {
-            let context = await this.getContext(ctx);
-
-            if (ctx.attachments != null) {
-                // @ts-ignore
-                const wallPost = ctx.attachments.find(
-                    (a) => a.type === "wall"
-                ) as WallAttachment;
-
-                // @ts-ignore
-                const text = wallPost?.text;
-                // @ts-ignore
-                const groupName = wallPost?.payload?.from?.name;
-
-                if (text == null) {
-                    return;
-                }
-
-                const message = util
-                    .format(
-                        i18next.t("forward_note"),
-                        i18next.t("social.vk"),
-                        groupName ?? i18next.t("social.group.unknown")
-                    )
-                    .concat(text);
-
-                context = {
-                    ...context,
-                    messageType: "forward",
-                    messageText: message,
-                };
+            if (ctx.attachments?.length > 0) {
+                return next();
             }
+
+            let context = await this.getContext(ctx);
 
             let completion = await this.completionHandler
                 .handleMessageText(context)
@@ -70,15 +44,69 @@ export default class VkBot extends BaseBot {
                 );
                 // completion = i18next.t("completionError") as string;
 
-                return;
+                return next();
             }
 
             await ctx.send(completion);
-            await next();
+            return next();
         });
     }
 
-    handleForward(): void {}
+    handleForward(): void {
+        this.vk.updates.on("message_new", async (ctx, next) => {
+            if (ctx.attachments?.length == 0) {
+                return next();
+            }
+
+            let context = await this.getContext(ctx);
+
+            // @ts-ignore
+            const wallPost = ctx.attachments.find(
+                (a) => a.type === "wall"
+            ) as WallAttachment;
+
+            // @ts-ignore
+            const text = wallPost?.text;
+            // @ts-ignore
+            const groupName = wallPost?.payload?.from?.name;
+
+            if (text == null || text.length === 0) {
+                return next();
+            }
+
+            const message = util
+                .format(
+                    i18next.t("forward_note"),
+                    i18next.t("social.vk"),
+                    groupName ?? i18next.t("social.group.unknown")
+                )
+                .concat(text);
+
+            context = {
+                ...context,
+                messageType: "forward",
+                messageText: message,
+            };
+
+            let completion = await this.completionHandler
+                .handleMessageText(context)
+                .catch((err) => {
+                    logger.error(err);
+                });
+
+            if (completion == null) {
+                logger.error(
+                    `Chat ${context.chatId} user ${context.username} forward completion error`
+                );
+                // completion = i18next.t("completionError") as string;
+
+                return next();
+            }
+
+            await ctx.send(completion);
+            return next();
+        });
+    }
 
     handleCommandStart(): void {
         this.hearManager.hear(/^\/start$/i, async (ctx) => {
@@ -133,6 +161,7 @@ export default class VkBot extends BaseBot {
         return {
             chatId: ctx.peerId!,
             chatType: ctx.isChat ? "group" : "user",
+            messageType: "text",
             messageText: ctx.text!,
             username: username,
         };

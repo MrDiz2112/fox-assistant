@@ -9,6 +9,7 @@ services:
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - VK_TOKEN=${VK_TOKEN}
+      - OPENAI_MODEL=${OPENAI_MODEL}
     working_dir: /app
     restart: always
     build:

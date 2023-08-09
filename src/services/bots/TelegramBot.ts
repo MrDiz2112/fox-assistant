@@ -87,14 +87,17 @@ export default class TelegramBot extends BaseBot {
 
             if (completion == null) {
                 logger.error(
-                    `Chat ${context.chatId} user ${context.username} completion error`
+                    `Chat ${context.chatId} user ${context.username} forward completion error`
                 );
                 completion = i18next.t("forwardError") as string;
             }
 
             await ctx
                 .replyWithMarkdownV2(
-                    completion.replace(/([|{\[\]*_~}+)(#>!=\-.])/gm, "\\$1")
+                    completion.replace(
+                        /(\[[^\][]*]\(http[^()]*\))|[_*[\]()~>#+=|{}.!-]/gi,
+                        (x, y) => (y ? y : "\\" + x)
+                    )
                 )
                 .catch((err) => {
                     logger.error(err);
